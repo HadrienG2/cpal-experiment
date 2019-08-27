@@ -19,10 +19,11 @@ fn main() {
     let my_stream = event_loop.build_output_stream(&device, &format)
                               .expect("Failed to create audio stream");
 
+    // FIXME: Setup some kind of user input thread before running the event loop
+
     let mut playing = false;
     let mut elapsed_samples = 0;
     let sample_period = 1. / (format.sample_rate.0 as f32);
-
     event_loop.run(|stream_id, stream_result| {
         // Check our inputs
         assert_eq!(stream_id, my_stream, "Encountered unexpected stream");
@@ -36,11 +37,11 @@ fn main() {
             for (sample_idx, sample) in buf.chunks_mut(format.channels as usize)
                                            .enumerate() {
                 for (chan_idx, chan_out) in sample.iter_mut().enumerate() {
-                    const MAGNITUDE : f32 = 0.01;
+                    const MAGNITUDE : f32 = 0.05;
                     const SIN_PULS : f32 = 2.0 * PI * 440.0;
-                    const DETUNE : f32 = 0.95;
+                    const DETUNE : f32 = 0.995;
                     let time = (elapsed_samples + sample_idx) as f32 * sample_period;
-                    let chan_puls = SIN_PULS * (chan_idx as f32) * DETUNE;
+                    let chan_puls = SIN_PULS * (1.0 + (chan_idx as f32) * (DETUNE - 1.0));
                     *chan_out = MAGNITUDE * (chan_puls * time).sin();
                     *chan_out += 0.5 * MAGNITUDE * (2.0 * chan_puls * time).sin();
                     *chan_out += 0.25 * MAGNITUDE * (4.0 * chan_puls * time).sin();
