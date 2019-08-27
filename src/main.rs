@@ -19,7 +19,8 @@ fn main() {
     let my_stream = event_loop.build_output_stream(&device, &format)
                               .expect("Failed to create audio stream");
 
-    // FIXME: Setup some kind of user input thread before running the event loop
+    // FIXME: Run the audio event loop in its own thread, and accept user input
+    //        via stdin to adjust e.g. magnitude, detune...
 
     let mut playing = false;
     let mut elapsed_samples = 0;
@@ -30,13 +31,16 @@ fn main() {
         let stream_data =
             stream_result.expect("Something bad happened to the stream/device");
 
-        // Access the output buffer
+        // Fill the output buffer
         use cpal::StreamData::Output;
         use cpal::UnknownTypeOutputBuffer::F32;
         if let Output { buffer: F32(mut buf) } = stream_data {
-            for (sample_idx, sample) in buf.chunks_mut(format.channels as usize)
-                                           .enumerate() {
+            // For each sample...
+            let num_chans = format.channels as usize;
+            for (sample_idx, sample) in buf.chunks_mut(num_chans).enumerate() {
+                // For each channel...
                 for (chan_idx, chan_out) in sample.iter_mut().enumerate() {
+                    // ...play the dumbest organ sound ever
                     const MAGNITUDE : f32 = 0.05;
                     const SIN_PULS : f32 = 2.0 * PI * 440.0;
                     const DETUNE : f32 = 0.995;
@@ -44,10 +48,12 @@ fn main() {
                     let chan_puls = SIN_PULS * (1.0 + (chan_idx as f32) * (DETUNE - 1.0));
                     *chan_out = MAGNITUDE * (chan_puls * time).sin();
                     *chan_out += 0.5 * MAGNITUDE * (2.0 * chan_puls * time).sin();
-                    *chan_out += 0.25 * MAGNITUDE * (4.0 * chan_puls * time).sin();
+                    *chan_out += 0.25 * MAGNITUDE * (3.0 * chan_puls * time).sin();
+                    *chan_out += 0.125 * MAGNITUDE * (4.0 * chan_puls * time).sin();
                 }
             }
-            elapsed_samples += buf.len() / (format.channels as usize);
+            // Keep track of the passage of time
+            elapsed_samples += buf.len() / num_chans;
         } else {
             panic!("Unexpected stream format");
         }
