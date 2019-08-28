@@ -19,8 +19,10 @@ fn main() {
     let my_stream = event_loop.build_output_stream(&device, &format)
                               .expect("Failed to create audio stream");
 
-    // FIXME: Run the audio event loop in its own thread, and accept user input
-    //        via stdin to adjust e.g. magnitude, detune...
+    // FIXME: Run the audio event loop in its own thread, make it RT priority
+    //        just in case CPAL doesn't (which is reasonable as it's a
+    //        privileged operation that can fail), and accept user input via
+    //        stdin to adjust e.g. magnitude, detune...
 
     let mut playing = false;
     let mut elapsed_samples = 0;
