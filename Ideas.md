@@ -189,3 +189,48 @@ using JACK...).
 
 Also need to think about what happens when a single module received input from
 two hardware streams.
+
+---
+
+Can also react to both inputs and outputs?
+
+Inputs MUST be buffered, always, because they may be ready before other required
+inputs are ready / before output is requested.
+
+Input callback would trigger sample conversion, resampling, and buffering.
+
+Outputs only need to be buffered if there is more than one. Otherwise, can just
+generate audio whenever it's requested.
+
+Output callback would trigger processing if data is not available yet.
+Processing would feed all outputs, since it must occur only once for the sake
+of filtering sanity.
+
+---
+
+Idea: An input has latency and data. Latency comes from...
+
+1. Signal propagation through whatever medium the analog signal has been through
+   (e.g. air -> microphone membrane -> transducer -> wires -> amps -> DAQ).
+   We do not know anything about the analog setup, so this part is unknown and
+   cannot be compensated in any way. User _may_ input it manually.
+2. Buffering waiting for N frames to be received before sending us the output.
+   This part is known perfectly since we know the buffer size.
+3. Time between buffer completion and audio callback is received. We may be able
+   to get by with assuming that this part is instantaneous, or the same for
+   every signal of interest. It does jitter, though. It may also be possible to
+   mix it together with the device model of part 1.
+
+We need a latency estimate in order to correctly sync signals from different
+sources. For example, to make sure that a MIDI keyboard triggers notes
+"instantaneously", and that MIDI or GUI parameter changes are heard "instantly".
+
+Instant response is actually impossible, because we don't control when the audio
+card is going to query data from us. But we may be able to get by with latency
+compensation, i.e. if signal takes 4ms to reach the ears, then it uses the
+parameter values from 4ms later. However, latency compensation requires
+extrapolation, and that is also tricky/risky.
+
+Another Very Important Thing is to ensure that signals are kept in sync. If one
+signal path is delayed, every other signal path should be delayed by the same
+amount in order to ensure e.g. phase consistency.
