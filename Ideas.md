@@ -159,3 +159,33 @@ General idea:
 * Lookahead time should be able to change dynamically, because we'll need more
   lookahead if a HW interface with a larger buffer size is connected as an
   output.
+
+---
+
+Output-driven design:
+
+- Output callback triggers generating more output (which is sent to all output
+  modules)
+- Input callback triggers buffering of input.
+- If input is not available at the time output is requested, then... too bad.
+
+Input-driven design:
+
+- As soon as input is available, output is generated.
+- Output callback just fetches from buffer.
+- Need some kind of fallback logic when there is no input (pure synth).
+
+---
+
+Another possibility is to use the JACK model: whole processing chain is treated
+like a giant module, processing callback runs when all inputs are ready and
+produces all outputs simultaneously (even if they may not be used right away by
+the actual output synchronization).
+
+This has some drawbacks though. It might be possible to run before all inputs
+are available, but this model does not allow for it. And a single faulty input
+makes a mess everywhere (which is a behavior that can actually be observed when
+using JACK...).
+
+Also need to think about what happens when a single module received input from
+two hardware streams.
