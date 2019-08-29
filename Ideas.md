@@ -206,6 +206,11 @@ Output callback would trigger processing if data is not available yet.
 Processing would feed all outputs, since it must occur only once for the sake
 of filtering sanity.
 
+Output-triggered processing minimizes latency. But it increases RT pressure,
+since there is no way to plan ahead (e.g. as soon as input is available).
+Output-triggered processing is also somewhat elegant: if output is not
+requested, it's not produced, yielding auto-saving of unused resources.
+
 ---
 
 Idea: An input has latency and data. Latency comes from...
@@ -234,3 +239,6 @@ extrapolation, and that is also tricky/risky.
 Another Very Important Thing is to ensure that signals are kept in sync. If one
 signal path is delayed, every other signal path should be delayed by the same
 amount in order to ensure e.g. phase consistency.
+
+---
+
