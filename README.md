@@ -11,3 +11,7 @@ because it has three major issues from my perspective:
 - It provides zero guarantee of synchronization between audio streams (unlike,
   say, PortAudio or JACK, which call you for all streams of a given device at
   once, leaving ugly stream sync for exotic multi-device use cases only).
+
+Fixing this myself would require making myself familiar with the relevant APIs
+from Apple and Microsoft, which I have no interest in as long as I'm just
+playing around. For now, I'll just use JACK/Pulse/PortAudio bindings directly.
